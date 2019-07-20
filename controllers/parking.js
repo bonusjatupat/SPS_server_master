@@ -1,0 +1,308 @@
+const mongoose = require('mongoose');
+const Parking = require('../models/parking');
+
+exports.list = (req, res) => {
+    console.log('gettttt');
+    Parking.find((err, parking) => {
+      if (err) {
+			res.status(400).send({ error: err });
+		} else {
+			res.json({ parking: parking });
+		}
+    });
+}
+
+exports.listOne = (req, res) => {
+    Parking.findById(req.params.id, (err, parking) => {
+		if (err) {
+			res.status(400).send({ error: err });
+		} else {
+			res.json({ parking: parking });
+		}
+    });
+}
+
+exports.insert = (req, res) => {
+    console.log('inserting parking lot');
+    const parking = new Parking({
+        _id: new mongoose.Types.ObjectId,
+        name: req.body.name,
+        description: req.body.description,
+        sensorSupportted: true,
+        numberBuilding: req.body.numberBuilding,
+        numberFloor: req.body.numberFloor,
+        numberSlot: {
+            total: req.body.numberSlot.total,
+            used: 0
+        },
+        facility: req.body.facility,
+        type: req.body.type,
+        price: {
+            free: {
+                hour: req.body.price.free.hour
+            },
+            paid: {
+                rate: req.body.price.paid.rate,
+                per: req.body.price.paid.per
+            }
+        }  
+    });
+
+    parking.save()
+        .then(result => {
+            console.log(result);
+            res.status(201).json({
+                message: "Handling POST requests to /reservations",
+                createdReservation: result
+            })
+        })
+        .catch(err => {
+            console.log(err);
+            res.status(500).json({
+                error: err
+            });
+        });
+}
+
+exports.insertSlot = (req,res) => {
+    const parkingId = req.params.id;
+    const slotSensor = req.body.slot.slotSensor;
+    let greenLight = req.body.slot.slotBarrier.green;
+    let redLight = req.body.slot.slotBarrier.red;
+    let blueLight = req.body.slot.slotBarrier.blue;
+    let available = "";
+    
+    //sensor = false & green = true => available
+    //sensor = false & red = true => reserved
+    //sensor = true & blue = true => parking
+    if(!slotSensor && greenLight && !redLight && !blueLight){
+        available = "available";
+    } else if(!slotSensor && !greenLight && redLight && !blueLight) {
+        available = "reserved";
+    } else if(slotSensor && !greenLight && !redLight && blueLight){
+        available = "parking";
+    }
+
+    var slotInFloor = 0;
+    var slotAvailableInFloor = 0;
+    var slotInUse = 0;
+    var slotNum = 0;
+
+    //ต้องเทียบค่า floor number กับ floor ของslotที่จะaddด้วย
+    //get original values & update slotNumber & update slot in floor
+    Parking.findOne({'_id': parkingId})
+        .exec()
+        .then(doc => {
+            slotNum = doc.numberSlot.total+1;
+            if(available == "available"){
+                slotInUse = doc.numberSlot.used;
+            }else{
+                slotInUse = doc.numberSlot.used+1;
+            }
+
+            for(var i=0; i<doc.floor.length; i++){
+                if(doc.floor[i].floorNumber = req.body.slot.floor){
+                    slotInFloor = doc.floor[i].slotTotal+1;
+                    if(available == "available"){
+                        slotAvailableInFloor = doc.floor[i].slotAvailable+1;
+                    }else{
+                        slotAvailableInFloor = doc.floor[i].slotAvailable;
+                    }
+                    break;
+                }
+            };
+
+            console.log("slotNum = "+slotNum);
+            console.log("slotInUse = "+slotInUse);
+            console.log("slotInFloor = "+slotInFloor);
+            console.log("slotAvailableInFloor = "+slotAvailableInFloor);
+
+            Parking.updateOne({'_id': parkingId},
+                {$set: {
+                    numberSlot: {
+                        total: slotNum,
+                        used: slotInUse
+                    }
+                }}).exec().then(result => {console.log(result)}).catch(err => res.status(404).json(err)); 
+                
+            Parking.updateOne({'_id': parkingId, 'floor.floorNumber': req.body.slot.floor}, {
+                $set: {
+                    'floor.$.slotTotal': slotInFloor,
+                    'floor.$.slotAvailable': slotAvailableInFloor
+                }})
+                .exec().then(result => {console.log(result)}).catch(err => res.status(404).json(err));
+        })
+        .catch(err => res.status(404).json({message: "No parking, floor found"}));
+
+    //add slot and set number slots
+    Parking.updateOne({_id: parkingId}, 
+        {$push: {
+            slot: {
+                    slotNumber: req.body.slot.slotNumber,
+                    building: req.body.slot.building,
+                    floor: req.body.slot.floor,
+                    slotSensor: slotSensor,
+                    slotBarrier: {
+                        green: greenLight,
+                        red: redLight,
+                        blue: blueLight
+                    },
+                    available: available,
+                    lastUpdate: new Date()    
+            }
+        }})
+        .exec().then(result => {res.status(200).json(result)}).catch(err => res.status(404).json(err))
+}
+
+//update numberFloor ด้วย
+exports.insertFloor = (req,res) => {
+    const parkingId = req.params.id;
+    Parking.update({_id: parkingId},
+        {$push: {
+            floor: {
+                floorNumber: req.body.floor.floorNumber,
+                facilities: req.body.floor.facilities,
+                slotTotal: 0,
+                slotAvailable: 0
+            }
+        }})
+        .exec()
+        .then(result => {
+            console.log(result);
+            res.status(200).json(result);
+        })
+        .catch(err => {
+            console.log(err);
+            res.status(500).json({
+                error: err
+            })
+        });
+}
+
+//ต้อง update ใน numberSlot กับ floor ด้วย
+exports.updateSlotAvailable = (req,res) => {
+    const parkingId = req.params.parkingId;
+    let slotId = req.params.slotId;
+    let slotSensor = req.body.slot.slotSensor;
+    let greenLight = req.body.slot.slotBarrier.green;
+    let redLight = req.body.slot.slotBarrier.red;
+    let blueLight = req.body.slot.slotBarrier.blue;
+    let available = "";
+
+    if(!slotSensor && greenLight && !redLight && !blueLight){
+        available = "available";
+    } else if(!slotSensor && !greenLight && redLight && !blueLight) {
+        available = "reserved";
+    } else if(slotSensor && !greenLight && !redLight && blueLight){
+        available = "parking";
+    }
+
+    var slotAvailableInFloor = 0;
+    var slotInUse = 0;
+    var slotNum = 0;
+
+    //reserved, parking -> available : numberSlot.used--, floor.slotAvailable++
+    //available -> reserved : numberSlot.used++, floor.slotAvailable--
+    //reserved -> parking : ไม่เปลี่ยน
+    if(available == "available" || available == "reserved"){
+        Parking.findOne({'_id': parkingId})
+            .exec()
+            .then(doc => {
+                slotNum = doc.numberSlot.total
+                
+                if(available == "available"){
+                    slotInUse = doc.numberSlot.used - 1
+                    for(var i=0; i<doc.floor.length; i++){
+                        if(doc.floor[i].floorNumber = req.body.slot.floor){
+                            slotAvailableInFloor = doc.floor[i].slotAvailable+1;
+                            break;
+                        }
+                    };
+                }else if(available == "reserved"){
+                    slotInUse = doc.numberSlot.used + 1
+                    for(var i=0; i<doc.floor.length; i++){
+                        if(doc.floor[i].floorNumber = req.body.slot.floor){
+                            slotAvailableInFloor = doc.floor[i].slotAvailable - 1;
+                            break;
+                        }
+                    };
+                }
+
+                console.log("slotInUse = "+slotInUse);
+                console.log("slotAvailableInFloor = "+slotAvailableInFloor);
+
+                Parking.updateOne({'_id': parkingId}, {
+                    $set: {
+                    numberSlot: {
+                            total: slotNum,
+                            used: slotInUse
+                        }
+                    }}).exec().then(result => {console.log(result)}).catch(err => res.status(404).json(err)); 
+                    
+                Parking.updateOne({'_id': parkingId, 'floor.floorNumber': req.body.slot.floor}, {
+                    $set: {
+                        'floor.$.slotAvailable': slotAvailableInFloor
+                    }})
+                    .exec().then(result => {console.log(result)}).catch(err => res.status(404).json(err));
+            })
+            .catch(err => res.status(404).json({message: "No parking, floor found"}));
+    }
+
+    Parking.update({'_id': parkingId, 'slot._id': slotId},
+        {$set: {
+            'slot.$.slotSensor': slotSensor,
+            'slot.$.slotBarrier.$.green': greenLight,
+            'slot.$.slotBarrier.$.red': redLight,
+            'slot.$.slotBarrier.$.blue': blueLight,
+            'slot.$.available': available,
+            'slot.$.lastUpdate': new Date()
+        }})
+        .exec()
+        .then(result => {
+            console.log(result);
+            res.status(200).json(result);
+        })
+        .catch(err => {
+            console.log(err);
+            res.status(500).json({
+                error: err
+            })
+        }); 
+}
+
+/*exports.deleteSlot = (req,res) => {
+    const parkingId = req.params.parkingId;
+    const slotId = req.params.slotId;
+
+    Parking.remove({'_id': parkingId, 'slot._id': slotId})
+        .exec()
+        .then(result => {
+            console.log(result);
+            res.status(200).json(result);
+        })
+        .catch(err => {
+            console.log(err);
+            res.status(500).json({
+                error: err
+            })
+        }); 
+}
+
+exports.getOneSlot = (req,res) => {
+    const parkingId = req.params.parkingId;
+    const slotId = req.params.slotId;
+
+    console.log(slotId);
+    Parking.find({$and:[{'_id': parkingId, 'slot._id': slotId}]})
+    .exec()
+    .then(result => {
+        console.log(result);
+        res.status(200).json(result);
+    })
+    .catch(err => {
+        console.log(err);
+        res.status(500).json({
+            error: err
+        })
+    }); 
+}*/
