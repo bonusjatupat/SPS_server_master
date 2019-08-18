@@ -1,5 +1,6 @@
 const mongoose = require('mongoose');
 const Parking = require('../models/parking');
+const upload = require('../misc/upload');
 
 exports.list = (req, res) => {
     console.log('gettttt');
@@ -22,12 +23,24 @@ exports.listOne = (req, res) => {
     });
 }
 
-exports.insert = (req, res) => {
+/*exports.insert = (req, res) => {
     console.log('inserting parking lot');
     const parking = new Parking({
         _id: new mongoose.Types.ObjectId,
         name: req.body.name,
         description: req.body.description,
+        address: {
+            description: req.body.address.description,
+            location: {
+                type: "Point",
+			    coordinates: { type: [req.body.address.location.coordinates.type] }
+            }
+        },
+        photos: req.body.photos,
+        contact: {
+            type: req.body.contact.type,
+            value: req.body.contact.value
+        },
         sensorSupportted: true,
         numberBuilding: req.body.numberBuilding,
         numberFloor: req.body.numberFloor,
@@ -45,7 +58,8 @@ exports.insert = (req, res) => {
                 rate: req.body.price.paid.rate,
                 per: req.body.price.paid.per
             }
-        }  
+        },
+        visible: true
     });
 
     parking.save()
@@ -62,6 +76,67 @@ exports.insert = (req, res) => {
                 error: err
             });
         });
+}*/
+
+exports.insert = (req,res) => {
+    upload.parkingPhotos(req, res, (error) => {
+        console.log(req.body.address.location.coordinates)
+        var newPost = {
+            _id: new mongoose.Types.ObjectId,
+            name: req.body.name,
+            description: req.body.description,
+            address: {
+                description: req.body.address.description,
+                location: {
+                    type: "Point",
+                    coordinates: req.body.address.location.coordinates
+                }
+            },
+            sensorSupportted: true,
+            numberBuilding: req.body.numberBuilding,
+            numberFloor: req.body.numberFloor,
+            numberSlot: {
+                total: 0,
+                used: 0
+            },
+            facility: req.body.facility,
+            type: req.body.type,
+            price: {
+                free: {
+                    hour: req.body.price.free.hour
+                },
+                paid: {
+                    rate: req.body.price.paid.rate,
+                    per: req.body.price.paid.per
+                }
+            },
+            visible: true
+        };
+
+        if (!error) {
+            var photos = [];
+            console.log(req.body.photos)
+			req.body.photos.map((photo, key) => {
+				upload.imageResizer(photo.path, (err, success) => {
+					if (!err) {
+						photos.push(photo.filename);
+					}
+				});
+			});
+			newPost.photos = photos;
+		} else {
+			console.log(error);
+        }
+        
+        let newParking = new Parking(newPost);
+		newParking.save((err, parking) => {
+			if (err) {
+				res.status(400).send({ error: err });
+			} else {
+				res.json({ parking: parking });
+			}
+		})
+    });
 }
 
 exports.insertSlot = (req,res) => {

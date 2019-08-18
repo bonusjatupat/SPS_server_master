@@ -6,7 +6,7 @@ var Parking = new Schema({
     _id: mongoose.Schema.Types.ObjectId,
 	name: String,
 	description: String,
-	/*address: {
+	address: {
 		description: String,
 		location: {
 			type: { type: String, enum: 'Point', default: 'Point' },
@@ -17,7 +17,7 @@ var Parking = new Schema({
 	contact: [{
 		type: String,
 		value: String
-	}],*/
+	}],
     sensorSupported: { type: Boolean, default: true },
 	numberBuilding: Number,
 	numberFloor: Number,
@@ -56,6 +56,7 @@ var Parking = new Schema({
 			per: String // format: 'hour', 'day', 'all', 'half_hour'
 		}
 	},
+	visible: { type: Boolean, default: false }
 	/*review: [{
 		star: Number,
 		message: String,
