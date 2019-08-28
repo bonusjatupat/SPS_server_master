@@ -345,6 +345,60 @@ exports.updateSlotAvailable = (req,res) => {
         }); 
 }
 
+exports.nearBy = (req, res) => {
+    // Input: Latitude, Longitude
+    // Output: Near Parking Places with the maximum distance of 1km.
+    const maxDistance = 1;
+	Parking.find({
+		"address.location": {
+			$geoWithin:
+				{
+					$centerSphere:
+						[[req.params.long, req.params.lat],
+						maxDistance / 6371]
+				}
+		}
+	}, (err, parking) => {
+		if (err) {
+			res.status(400).send({ error: err });
+		} else {
+			var counter = 0;
+			var parkingData = [];
+			var newParking = {}
+			//var slotCounter = {}
+			for (const item of parking) {
+				newParking = JSON.parse(JSON.stringify(item)); // Deep clone Object
+
+				/*slotCounter = {
+					availableSlot: -1,
+					totalSlot: -1
+				}
+				if (newParking.slotSensor.length > 0) {
+					slotCounter.availableSlot = newParking.slotSensor.filter((x) => { return x.available == true }).length;
+					slotCounter.totalSlot = newParking.slotSensor.length;
+				} else if (item.slot) {
+					if (newParking.slot.total > 0) {
+						slotCounter.availableSlot = newParking.slot.used;
+						slotCounter.totalSlot = newParking.slot.total;
+					} else {
+						slotCounter.availableSlot = newParking.slot.used;
+						slotCounter.totalSlot = newParking.slot.used;
+					}		
+				}
+				delete newParking['slot'];
+				delete newParking['slotSensor'];
+				newParking.slotCounter = slotCounter;*/
+				parkingData.push(newParking);
+
+				if (counter == parking.length - 1) {
+					res.json({ parking: parkingData });
+				}
+				counter++;
+			}
+		}
+	});
+}
+
 /*exports.deleteSlot = (req,res) => {
     const parkingId = req.params.parkingId;
     const slotId = req.params.slotId;

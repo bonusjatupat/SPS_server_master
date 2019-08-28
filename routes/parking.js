@@ -6,6 +6,7 @@ router.get('/', parking.list)
     .post('/', parking.insert)
     .patch('/:id/insertSlot', parking.insertSlot)
     .put('/:id/insertFloor', parking.insertFloor)
+    .get('/find/:lat/:long', parking.nearBy)
     .patch('/:parkingId/:slotId/updateSlotAvailable', parking.updateSlotAvailable);
     //.delete('/:parkingId/:slotId/deleteSlot', parking.deleteSlot)
     //.get('/:parkingId/:slotId/getSlot', parking.getOneSlot);
