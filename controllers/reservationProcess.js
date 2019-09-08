@@ -2,6 +2,7 @@ const moment = require('moment');
 const User = require('../models/user');
 const Parking = require('../models/parking');
 const Reservation = require('../models/reservation');
+const mongoose = require('mongoose');
 
 //get floors to show in the choosing floor page
 exports.parkingFloor = (req,res) => {
@@ -58,6 +59,7 @@ exports.reserveInformation = (req,res) => {
 
     //get slot number
     var tempReserveInfo = {
+        _id: new mongoose.Types.ObjectId(),
         userID: userID,
         parkingID: parkingID,
         slotID: "",
@@ -66,9 +68,9 @@ exports.reserveInformation = (req,res) => {
         slotNumber: "",
         reservationInfo: {
             date: moment().format('DD-MM-YYYY'),
-            time: moment().format('HH:mm:ss')
+            time: moment().format('HH:mm')
         },
-        arrivalTime: moment().add(1, 'hours').format('HH:mm:ss'),
+        arrivalTime: moment().add(1, 'hours').format('HH:mm'),
         realArrivalTime: "",
         price: 0
     }

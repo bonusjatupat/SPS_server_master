@@ -18,7 +18,7 @@ exports.listOne = (req, res) => {
 		if (err) {
 			res.status(400).send({ error: err });
 		} else {
-			res.json({ parking: parking });
+			res.status(200).json({ parking: parking });
 		}
     });
 }

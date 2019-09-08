@@ -70,7 +70,7 @@ exports.signInLocal = (req,res) => {
             if(err){
                 res.status(400).send({ error: err });
             }else{
-                res.status(200).json({user: user});
+                res.status(200).json({user});
             }
         })
     

@@ -80,7 +80,7 @@ exports.delete = (req,res) => {
 
 exports.insert = (req, res) => {
     const reservation = new Reservation({
-        _id: new mongoose.Types.ObjectId(),
+        _id: req.body._id,
         userID: req.body.userID,
         parkingID: req.body.parkingID,
         slotID: req.body.slotID,
