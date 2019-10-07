@@ -23,7 +23,7 @@ var Parking = new Schema({
 	numberFloor: Number,
 	floor: [{
 		floorNumber: Number,
-		facilities: [String],
+		facilities: String,
 		slotTotal: Number,
 		slotAvailable: Number
 	}],
@@ -56,7 +56,8 @@ var Parking = new Schema({
 			per: String // format: 'hour', 'day', 'all', 'half_hour'
 		}
 	},
-	visible: { type: Boolean, default: false }
+	visible: { type: Boolean, default: false },
+	spsSupported: Boolean
 	/*review: [{
 		star: Number,
 		message: String,

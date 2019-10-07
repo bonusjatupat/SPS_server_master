@@ -4,6 +4,7 @@ const Schema = mongoose.Schema;
 
 var Reservation = new Schema({
     _id: mongoose.Schema.Types.ObjectId,
+    bookingID: String,
     userID: String,
     parkingID: String,
     slotID: String,
@@ -17,7 +18,7 @@ var Reservation = new Schema({
     arrivalTime: String,
     realArrivalTime: String,
     price: Number,
-    status: String //"cancelled", "successed", "pending", "late"
+    status: String //"cancelled", "successed", "pending"
 });
 
 module.exports = mongoose.model('SPS_reservations', Reservation);

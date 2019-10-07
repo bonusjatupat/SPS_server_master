@@ -81,7 +81,7 @@ exports.reserveInformation = (req,res) => {
             price = doc.price.paid.rate;
 
             for(var i=0; i<doc.slot.length; i++){
-                if(doc.slot[i].floor == floor && doc.slot[i].available == "available"){
+                if(parseInt(doc.slot[i].floor) == floor && doc.slot[i].available == "available"){
                     slots.push(doc.slot[i]);
                     break;
                 }
@@ -228,7 +228,6 @@ exports.updateSlotAfterReservation = (req, res) => {
     }
 
 }
-
 
 
 

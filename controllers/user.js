@@ -72,6 +72,39 @@ exports.signInLocal = (req,res) => {
             }else{
                 res.status(200).json({user});
             }
-        })
-    
+        })   
+}
+
+exports.updateBalance = (req,res) => {
+    const userId = req.params.userId;
+    const amount = req.params.amount;
+
+    var currentBalance = 0;
+    var newBalance = 0;
+
+    User.findOne({'_id': userId
+        }, (err, user) => {
+            if(err){
+                res.status(400).send({ error: err });
+            }else{
+                currentBalance = user.balance;
+                newBalance = currentBalance - amount;
+
+                User.update({'_id': userId},
+                    {$set: {
+                        'balance': newBalance
+                    }})
+                    .exec()
+                    .then(result => {
+                        console.log(result);
+                        res.status(200).json(result.balance);
+                    })
+                    .catch(err => {
+                        console.log(err);
+                        res.status(500).json({
+                            error: err
+                        })
+                    }); 
+            }
+        }) 
 }

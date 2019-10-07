@@ -80,7 +80,8 @@ exports.delete = (req,res) => {
 
 exports.insert = (req, res) => {
     const reservation = new Reservation({
-        _id: req.body._id,
+        _id: new mongoose.Types.ObjectId,
+        bookingID: req.body._id,
         userID: req.body.userID,
         parkingID: req.body.parkingID,
         slotID: req.body.slotID,
@@ -88,19 +89,19 @@ exports.insert = (req, res) => {
         floor: req.body.floor,
         slotNumber: req.body.slotNumber,
         reservationInfo: {
-            date: moment().format('DD-MM-YYYY'),
-            time: moment().format('HH:mm:ss')
+            date: req.body.reservationInfo.date,
+            time: req.body.reservationInfo.time
         },
-        arrivalTime: moment().add(1, 'hours').format('HH:mm:ss'),
+        arrivalTime: req.body.arrivalTime,
         realArrivalTime: "",
         price: req.body.price,
-        status: "onTime"
+        status: "pending"
     });
 
     reservation.save()
         .then(result => {
             console.log(result);
-            res.status(201).json({
+            res.status(200).json({
                 message: "Handling POST requests to /reservations",
                 createdReservation: result
             })
@@ -110,6 +111,61 @@ exports.insert = (req, res) => {
             res.status(500).json({
                 error: err
             });
+        });
+}
+
+exports.updateStatus = (req, res) => {
+    const bookingID = req.params.bookingId;
+    const userID = req.params.userId;
+    const status = req.params.status;
+
+    Reservation.update({'bookingID': bookingID, 'userID': userID},
+        {$set: {
+            'realArrivalTime': moment().format('HH:mm'),
+            'status': status
+        }})
+        .exec()
+        .then(result => {
+            console.log(result);
+            res.status(200).json(result);
+        })
+        .catch(err => {
+            console.log(err);
+            res.status(500).json({
+                error: err
+            })
+        }); 
+}
+
+exports.updatePrice = (req, res) => {
+    const bookingID = req.params.bookingId;
+    const price = req.params.price;
+
+    Reservation.findOne({'bookingID': bookingID})
+        .exec()
+        .then(doc => {
+            var oldPrice = doc.price;
+            Reservation.update({'bookingID': bookingID},
+                {$set: {
+                    'price': oldPrice + price
+                }})
+                .exec()
+                .then(result => {
+                    console.log(result);
+                    res.status(200).json(result);
+                })
+                .catch(err => {
+                    console.log(err);
+                    res.status(500).json({
+                        error: err
+                    })
+                }); 
+        })
+        .catch(err => {
+            console.log(err);
+            res.status(500).json({
+                error: err
+            })
         });
 }
 

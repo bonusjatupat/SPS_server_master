@@ -110,7 +110,8 @@ exports.insert = (req,res) => {
                     per: req.body.price.paid.per
                 }
             },
-            visible: true
+            visible: true,
+            spsSupported: req.body.spsSupported
         };
 
         if (!error) {
