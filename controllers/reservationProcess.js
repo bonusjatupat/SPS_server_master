@@ -101,12 +101,12 @@ exports.reserveInformation = (req,res) => {
 
 //add 1 hour and update price, reservation status when user's late and want to continue reserving
 exports.addAdditionalHour = (req, res) => {
-    const id = req.params.reservationID;
+    const bookingID = req.params.bookingID;
 
     var priceParking = 0;
     var price = 0;
     var updatedPrice = 0;
-    Reservation.findById(id)
+    Reservation.findOne({'bookingID': bookingID})
         .exec()
         .then(doc => {
             if(doc){
@@ -117,10 +117,9 @@ exports.addAdditionalHour = (req, res) => {
                         if(doc){
                             priceParking = doc.price.paid.rate;
                             updatedPrice = priceParking + price;
-                            Reservation.updateOne({ _id: id}, { 
+                            Reservation.updateOne({ bookingID: bookingID}, { 
                                 $set: {
-                                    arrivalTime: moment().add(1, 'hours').format('HH:mm:ss'),
-                                    status: "late",
+                                    arrivalTime: moment().add(1, 'hours').format('HH:mm'),
                                     price: updatedPrice
                                 }})
                                 .exec()

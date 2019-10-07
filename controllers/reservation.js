@@ -138,7 +138,7 @@ exports.updateStatus = (req, res) => {
 }
 
 exports.updatePrice = (req, res) => {
-    const bookingID = req.params.bookingId;
+    const bookingID = req.params.bookingID;
     const price = req.params.price;
 
     Reservation.findOne({'bookingID': bookingID})
