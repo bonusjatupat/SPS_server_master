@@ -1,6 +1,6 @@
 const mongoose = require('mongoose');
 const Parking = require('../models/parking');
-const upload = require('../misc/upload');
+//const upload = require('../misc/upload');
 
 exports.list = (req, res) => {
     console.log('gettttt');
@@ -114,7 +114,7 @@ exports.insert = (req,res) => {
             spsSupported: req.body.spsSupported
         };
 
-        if (!error) {
+/*        if (!error) {
             var photos = [];
             console.log(req.body.photos)
 			req.body.photos.map((photo, key) => {
@@ -128,6 +128,7 @@ exports.insert = (req,res) => {
 		} else {
 			console.log(error);
         }
+*/
         
         let newParking = new Parking(newPost);
 		newParking.save((err, parking) => {
@@ -416,14 +417,14 @@ exports.nearBy = (req, res) => {
                 error: err
             })
         }); 
-}
+}*/
 
-exports.getOneSlot = (req,res) => {
+exports.getSlot = (req,res) => {
     const parkingId = req.params.parkingId;
     const slotId = req.params.slotId;
 
     console.log(slotId);
-    Parking.find({$and:[{'_id': parkingId, 'slot._id': slotId}]})
+    Parking.findOne({_id: parkingId}).select({ slot: {$elemMatch: {_id: slotId}}})
     .exec()
     .then(result => {
         console.log(result);
@@ -435,4 +436,4 @@ exports.getOneSlot = (req,res) => {
             error: err
         })
     }); 
-}*/
+}
