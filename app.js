@@ -11,7 +11,7 @@ const _CONFIG = require("./misc/config");
 
 const app = express();
 
-mongoose.connect('mongodb+srv://secureParkingSystem:' + process.env.MONGO_ATLAS_PW +'@sps-arks6.mongodb.net/SPS?retryWrites=true', {useNewUrlParser: true});
+mongoose.connect('mongodb+srv://secureParkingSystem:' + process.env.MONGO_ATLAS_PW +'@sps-arks6.mongodb.net/SPS?retryWrites=true', {useNewUrlParser: true, useUnifiedTopology: true });
                  // mongodb+srv://secureParkingSystem:<password>@sps-arks6.mongodb.net/test?retryWrites=true
 app.use(express.json());
 app.use(express.urlencoded({ extended: false}));
