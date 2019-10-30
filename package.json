@@ -21,6 +21,7 @@
     "moment": "^2.24.0",
     "mongoose": "^5.7.5",
     "node-gyp": "^6.0.0",
+    "node-pre-gyp": "^0.14.0",
     "nodejs-state-machine": "^2.0.0",
     "passport": "^0.4.0",
     "rebuild": "^0.1.2",
