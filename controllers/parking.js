@@ -423,13 +423,39 @@ exports.getSlot = (req,res) => {
     const parkingId = req.params.parkingId;
     const slotId = req.params.slotId;
 
+    var slot = {
+        _id: "",
+        slotBarrier: {
+            green: "",
+            red: "",
+            blue: ""
+        },
+        slotNumber: 0,
+        building: 0,
+        floor: 0,
+        slotSensor: "",
+        available: "",
+        lastUpdate: ""
+    }
+
     console.log(slotId);
     Parking.findOne({_id: parkingId}).select({ slot: {$elemMatch: {_id: slotId}}})
     .exec()
     .then(result => {
         console.log(result);
         
-        res.status(200).json(result);
+        slot._id = result.slot[0]._id;
+        slot.slotBarrier.green = result.slot[0].slotBarrier.green;
+        slot.slotBarrier.red = result.slot[0].slotBarrier.red;
+        slot.slotBarrier.blue = result.slot[0].slotBarrier.blue;
+        slot.slotNumber = result.slot[0].slotNumber;
+        slot.building = result.slot[0].building;
+        slot.floor = result.slot[0].floor;
+        slot.slotSensor = result.slot[0].slotSensor;
+        slot.available = result.slot[0].available;
+        slot.lastUpdate = result.slot[0].lastUpdate;
+        
+        res.status(200).json(slot);
     })
     .catch(err => {
         console.log(err);
