@@ -75,6 +75,23 @@ exports.signInLocal = (req,res) => {
         })   
 }
 
+exports.signUpCheckEmailExists = (req,res) => {
+    const email = req.body.email;
+
+    User.findOne({'local.email': email},
+        (err, user) => {
+            if(err){
+                res.status(400).send({ error: err});
+            }
+
+            if(user){
+                res.json({ found: true });
+            } else {
+                res.json({ found: false });
+            }
+        })
+}
+
 exports.updateBalance = (req,res) => {
     const userId = req.params.userId;
     const amount = req.params.amount;
