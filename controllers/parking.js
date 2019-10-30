@@ -442,7 +442,7 @@ exports.getSlot = (req,res) => {
     Parking.findOne({_id: parkingId}).select({ slot: {$elemMatch: {_id: slotId}}})
     .exec()
     .then(result => {
-        console.log(result);
+        console.log(slot);
         
         slot._id = result.slot[0]._id;
         slot.slotBarrier.green = result.slot[0].slotBarrier.green;
