@@ -260,10 +260,10 @@ exports.insertFloor = (req,res) => {
 exports.updateSlotAvailable = (req,res) => {
     const parkingId = req.params.parkingId;
     let slotId = req.params.slotId;
-    let slotSensor = req.body.slot.slotSensor;
-    let greenLight = req.body.slot.slotBarrier.green;
-    let redLight = req.body.slot.slotBarrier.red;
-    let blueLight = req.body.slot.slotBarrier.blue;
+    let slotSensor = req.body.slotSensor;
+    let greenLight = req.body.slotBarrier.green;
+    let redLight = req.body.slotBarrier.red;
+    let blueLight = req.body.slotBarrier.blue;
     let available = "";
 
     if(!slotSensor && greenLight && !redLight && !blueLight){
@@ -290,7 +290,7 @@ exports.updateSlotAvailable = (req,res) => {
                 if(available == "available"){
                     slotInUse = doc.numberSlot.used - 1
                     for(var i=0; i<doc.floor.length; i++){
-                        if(doc.floor[i].floorNumber = req.body.slot.floor){
+                        if(doc.floor[i].floorNumber = req.body.floor){
                             slotAvailableInFloor = doc.floor[i].slotAvailable+1;
                             break;
                         }
@@ -298,7 +298,7 @@ exports.updateSlotAvailable = (req,res) => {
                 }else if(available == "reserved"){
                     slotInUse = doc.numberSlot.used + 1
                     for(var i=0; i<doc.floor.length; i++){
-                        if(doc.floor[i].floorNumber = req.body.slot.floor){
+                        if(doc.floor[i].floorNumber = req.body.floor){
                             slotAvailableInFloor = doc.floor[i].slotAvailable - 1;
                             break;
                         }
@@ -316,7 +316,7 @@ exports.updateSlotAvailable = (req,res) => {
                         }
                     }}).exec().then(result => {console.log(result)}).catch(err => res.status(404).json(err)); 
                     
-                Parking.updateOne({'_id': parkingId, 'floor.floorNumber': req.body.slot.floor}, {
+                Parking.updateOne({'_id': parkingId, 'floor.floorNumber': req.body.floor}, {
                     $set: {
                         'floor.$.slotAvailable': slotAvailableInFloor
                     }})
@@ -325,12 +325,13 @@ exports.updateSlotAvailable = (req,res) => {
             .catch(err => res.status(404).json({message: "No parking, floor found"}));
     }
 
-    Parking.update({'_id': parkingId, 'slot._id': slotId},
+    console.log(greenLight);
+    Parking.updateOne({'_id': parkingId, 'slot._id': slotId},
         {$set: {
             'slot.$.slotSensor': slotSensor,
-            'slot.$.slotBarrier.$.green': greenLight,
-            'slot.$.slotBarrier.$.red': redLight,
-            'slot.$.slotBarrier.$.blue': blueLight,
+            'slot.$.slotBarrier.green': greenLight,
+            'slot.$.slotBarrier.red': redLight,
+            'slot.$.slotBarrier.blue': blueLight,
             'slot.$.available': available,
             'slot.$.lastUpdate': new Date()
         }})
@@ -345,6 +346,7 @@ exports.updateSlotAvailable = (req,res) => {
                 error: err
             })
         }); 
+
 }
 
 exports.nearBy = (req, res) => {
