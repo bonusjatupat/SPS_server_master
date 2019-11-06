@@ -9,6 +9,7 @@ router.get('/', parking.list)
     .get('/find/:lat/:long', parking.nearBy)
     .patch('/:parkingId/:slotId/updateSlotAvailable', parking.updateSlotAvailable)
     //.delete('/:parkingId/:slotId/deleteSlot', parking.deleteSlot)
-    .get('/:parkingId/:slotId/getSlot', parking.getSlot);
+    .get('/:parkingId/:slotId/getSlot', parking.getSlot)
+    .put('/:parkingId/:slotId/updateSlotAvailable', parking.updateSlotAvailablePut);
 
 module.exports = router;

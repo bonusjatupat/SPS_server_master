@@ -466,3 +466,95 @@ exports.getSlot = (req,res) => {
         })
     }); 
 }
+
+exports.updateSlotAvailablePut = (req,res) => {
+    const parkingId = req.params.parkingId;
+    let slotId = req.params.slotId;
+    let slotSensor = req.body.slotSensor;
+    let greenLight = req.body.slotBarrier.green;
+    let redLight = req.body.slotBarrier.red;
+    let blueLight = req.body.slotBarrier.blue;
+    let available = "";
+
+    if(!slotSensor && greenLight && !redLight && !blueLight){
+        available = "available";
+    } else if(!slotSensor && !greenLight && redLight && !blueLight) {
+        available = "reserved";
+    } else if(slotSensor && !greenLight && !redLight && blueLight){
+        available = "parking";
+    }
+
+    var slotAvailableInFloor = 0;
+    var slotInUse = 0;
+    var slotNum = 0;
+
+    //reserved, parking -> available : numberSlot.used--, floor.slotAvailable++
+    //available -> reserved : numberSlot.used++, floor.slotAvailable--
+    //reserved -> parking : ไม่เปลี่ยน
+    if(available == "available" || available == "reserved"){
+        Parking.findOne({'_id': parkingId})
+            .exec()
+            .then(doc => {
+                slotNum = doc.numberSlot.total
+                
+                if(available == "available"){
+                    slotInUse = doc.numberSlot.used - 1
+                    for(var i=0; i<doc.floor.length; i++){
+                        if(doc.floor[i].floorNumber = req.body.floor){
+                            slotAvailableInFloor = doc.floor[i].slotAvailable+1;
+                            break;
+                        }
+                    };
+                }else if(available == "reserved"){
+                    slotInUse = doc.numberSlot.used + 1
+                    for(var i=0; i<doc.floor.length; i++){
+                        if(doc.floor[i].floorNumber = req.body.floor){
+                            slotAvailableInFloor = doc.floor[i].slotAvailable - 1;
+                            break;
+                        }
+                    };
+                }
+
+                console.log("slotInUse = "+slotInUse);
+                console.log("slotAvailableInFloor = "+slotAvailableInFloor);
+
+                Parking.updateOne({'_id': parkingId}, {
+                    $set: {
+                    numberSlot: {
+                            total: slotNum,
+                            used: slotInUse
+                        }
+                    }}).exec().then(result => {console.log(result)}).catch(err => res.status(404).json(err)); 
+                    
+                Parking.updateOne({'_id': parkingId, 'floor.floorNumber': req.body.floor}, {
+                    $set: {
+                        'floor.$.slotAvailable': slotAvailableInFloor
+                    }})
+                    .exec().then(result => {console.log(result)}).catch(err => res.status(404).json(err));
+            })
+            .catch(err => res.status(404).json({message: "No parking, floor found"}));
+    }
+
+    console.log(greenLight);
+    Parking.updateOne({'_id': parkingId, 'slot._id': slotId},
+        {$set: {
+            'slot.$.slotSensor': slotSensor,
+            'slot.$.slotBarrier.green': greenLight,
+            'slot.$.slotBarrier.red': redLight,
+            'slot.$.slotBarrier.blue': blueLight,
+            'slot.$.available': available,
+            'slot.$.lastUpdate': new Date()
+        }})
+        .exec()
+        .then(result => {
+            console.log(result);
+            res.status(200).json(result);
+        })
+        .catch(err => {
+            console.log(err);
+            res.status(500).json({
+                error: err
+            })
+        }); 
+
+}
