@@ -6,6 +6,7 @@ router.get('/', user.list)
     .get('/:email/:password/signInLocal', user.signInLocal)
     .post('/signup/email_exists', user.signUpCheckEmailExists)
     .post('/', user.addUserLocal)
-    .patch('/:userId/:amount/updateBalance', user.updateBalance);
+    .patch('/:userId/:amount/updateBalance', user.updateBalance)
+    .post('/signup', user.signUp);
 
 module.exports = router;
