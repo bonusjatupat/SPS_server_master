@@ -93,34 +93,19 @@ exports.signUpCheckEmailExists = (req,res) => {
 }
 
 exports.signUp = (req, res) => {
-    User.findOne({ "local.email": req.body.email }, (err, existingUser) => {
-        if (err) res.status(403).send({ error: { type: "sys", message: err } });
-
-        if (existingUser) {
-            res.json({ error: { type: "code", message: "USER_ALREADY" } });
-        }
-
-        if (req.user) {
-            var user = req.user;
-
-            user.local.email = req.body.email;
-            user.local.password = user.generateHash(req.body.password);
-            user.personalInfo.name = req.body.name;
-
-            user.save(err => {
-                if (err)
-                    res.status(403).send({
-                        error: { type: "sys", message: err }
-                    });
-
-                res.json({ user: user });
-            });
-        } else {
             var newUser = new User();
 
             newUser.local.email = req.body.email;
             newUser.local.password = req.body.password;
             newUser.personalInfo.name = req.body.name;
+
+            newUser._id = new mongoose.Types.ObjectId();
+            newUser.local.username = "-";
+            newUser.personalInfo.address.detail = "-";
+            newUser.personalInfo.phone = "-";
+            newUser.personalInfo.photo = "IMG_9924.jpg";
+            newUser.balance = 1000;
+
 
             newUser.loginLog.push({ method: "local", timestamp: Date.now() });
             newUser.save((err, user) => {
@@ -128,19 +113,11 @@ exports.signUp = (req, res) => {
                     res.status(403).send({
                         error: { type: "sys", message: err }
                     });
-
-                req.login(newUser, err => {
-                    if (err)
-                        res.status(403).send({
-                            error: { type: "sys", message: err }
-                        });
-
-                    res.json({ user: user });
-                });
+                else{
+                    res.status(200).json({user});
+                }
             });
-        }
-    });
-};
+    }
 
 exports.updateBalance = (req,res) => {
     const userId = req.params.userId;
