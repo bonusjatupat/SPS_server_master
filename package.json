@@ -18,7 +18,7 @@
     "express-session": "^1.16.2",
     "gm": "^1.23.1",
     "md5": "^2.2.1",
-    "moment": "^2.24.0",
+    "moment": "^2.29.4",
     "mongoose": "^5.7.5",
     "node-gyp": "^6.0.0",
     "node-pre-gyp": "^0.14.0",
